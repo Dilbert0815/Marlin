@@ -289,6 +289,9 @@ typedef struct SettingsDataStruct {
 MarlinSettings settings;
 
 uint16_t MarlinSettings::datasize() { return sizeof(SettingsData); }
+#if ENABLED(DELTA)
+  bool MarlinSettings::delta_changed;
+#endif
 
 /**
  * Post-process after Retrieve or Reset
@@ -307,7 +310,8 @@ void MarlinSettings::postprocess() {
   // Make sure delta kinematics are updated before refreshing the
   // planner position so the stepper counts will be set correctly.
   #if ENABLED(DELTA)
-    recalc_delta_settings();
+    if (delta_changed)
+      recalc_delta_settings();
   #endif
 
   #if ENABLED(PIDTEMP)
@@ -366,6 +370,10 @@ void MarlinSettings::postprocess() {
   #define EEPROM_READ(VAR) persistentStore.read_data(eeprom_index, (uint8_t*)&VAR, sizeof(VAR), &working_crc, !validating)
   #define EEPROM_READ_ALWAYS(VAR) persistentStore.read_data(eeprom_index, (uint8_t*)&VAR, sizeof(VAR), &working_crc)
   #define EEPROM_ASSERT(TST,ERR) if (!(TST)) do{ SERIAL_ERROR_START_P(port); SERIAL_ERRORLNPGM_P(port, ERR); eeprom_error = true; }while(0)
+    
+  #if ENABLED(DELTA)
+    #define EEPROM_CALC_CRC(VAR, _CRC) crc16(&(_CRC), (uint8_t*)&VAR, sizeof(VAR))
+  #endif
 
   #if ENABLED(DEBUG_EEPROM_READWRITE)
     #define _FIELD_TEST(FIELD) \
@@ -1249,9 +1257,20 @@ void MarlinSettings::postprocess() {
       //
 
       #if ENABLED(DELTA)
-
+      {
+        uint16_t crc1 = 0, crc2 = 0;
+        delta_changed = false;
         _FIELD_TEST(delta_height);
 
+        //crc before
+        EEPROM_CALC_CRC(delta_height, crc1);
+        EEPROM_CALC_CRC(delta_endstop_adj, crc1);
+        EEPROM_CALC_CRC(delta_radius, crc1);
+        EEPROM_CALC_CRC(delta_diagonal_rod, crc1);
+        EEPROM_CALC_CRC(delta_segments_per_second, crc1);
+        EEPROM_CALC_CRC(delta_calibration_radius, crc1);
+        EEPROM_CALC_CRC(delta_tower_angle_trim, crc1);
+        
         EEPROM_READ(delta_height);              // 1 float
         EEPROM_READ(delta_endstop_adj);         // 3 floats
         EEPROM_READ(delta_radius);              // 1 float
@@ -1260,6 +1279,17 @@ void MarlinSettings::postprocess() {
         EEPROM_READ(delta_calibration_radius);  // 1 float
         EEPROM_READ(delta_tower_angle_trim);    // 3 floats
 
+        //crc after
+        EEPROM_CALC_CRC(delta_height, crc2);
+        EEPROM_CALC_CRC(delta_endstop_adj, crc2);
+        EEPROM_CALC_CRC(delta_radius, crc2);
+        EEPROM_CALC_CRC(delta_diagonal_rod, crc2);
+        EEPROM_CALC_CRC(delta_segments_per_second, crc2);
+        EEPROM_CALC_CRC(delta_calibration_radius, crc2);
+        EEPROM_CALC_CRC(delta_tower_angle_trim, crc2);
+        if (crc1 != crc2)
+          delta_changed = true;
+      }
       #elif ENABLED(X_DUAL_ENDSTOPS) || ENABLED(Y_DUAL_ENDSTOPS) || Z_MULTI_ENDSTOPS
 
         _FIELD_TEST(x2_endstop_adj);
@@ -1738,6 +1768,7 @@ void MarlinSettings::postprocess() {
                                                                                   // live at the very end of the eeprom
 
     uint16_t MarlinSettings::meshes_start_index() {
+			
       return (datasize() + EEPROM_OFFSET + 32) & 0xFFF8;  // Pad the end of configuration data so it can float up
                                                           // or down a little bit without disrupting the mesh data
     }

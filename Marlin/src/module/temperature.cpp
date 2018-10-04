@@ -61,6 +61,8 @@
   #endif
 #endif
 
+#include "../libs/buzzer.h"  // Buzzer, if possible
+
 Temperature thermalManager;
 
 /**
@@ -445,7 +447,9 @@ uint8_t Temperature::soft_pwm_amount[HOTENDS];
                 _temp_error(hotend, PSTR(MSG_T_HEATING_FAILED), TEMP_ERR_PSTR(MSG_HEATING_FAILED_LCD, hotend));
             }
             else if (current < target - (MAX_OVERSHOOT_PID_AUTOTUNE)) // Heated, then temperature fell too far?
+            {
               _temp_error(hotend, PSTR(MSG_T_THERMAL_RUNAWAY), TEMP_ERR_PSTR(MSG_THERMAL_RUNAWAY, hotend));
+            }
           }
         #endif
       } // every 2 seconds
@@ -595,6 +599,7 @@ void Temperature::_temp_error(const int8_t e, const char * const serial_msg, con
     else
       disable_all_heaters(); // paranoia
   #endif
+  BUZZ(5000, 800);
 }
 
 void Temperature::max_temp_error(const int8_t e) {
