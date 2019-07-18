@@ -67,7 +67,7 @@
   #include "../feature/bedlevel/bedlevel.h"
 #endif
 
-#if ENABLED(LED_CONTROL_MENU)
+#if ENABLED(LED_CONTROL_MENU) || ENABLED(PRINTER_EVENT_LEDS)
   #include "../feature/leds/leds.h"
 #endif
 
@@ -497,6 +497,11 @@ uint16_t max_display_update_time = 0;
   #if ENABLED(PIDTEMP)
     float raw_Ki, raw_Kd; // place-holders for Ki and Kd edits
   #endif
+  
+  #if ENABLED(SHOW_BOOTSCREEN)
+    bool bootscreen_done;
+    uint8_t boot_scroll_idx, boot_scroll_max;
+  #endif
 
   inline bool use_click() {
     const bool click = lcd_clicked;
@@ -762,6 +767,60 @@ void lcd_status_screen() {
   lcd_implementation_status_screen();
 }
 
+#if ENABLED(SHOW_BOOTSCREEN)
+/**
+ * set boot screen
+ */
+bool lcd_bootscreen(const bool finish = false
+  #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+    , const bool custom = false
+  #endif
+  ) {
+
+  
+  if (finish && (boot_scroll_idx >= boot_scroll_max)
+    ) {
+    bootscreen_done = true;
+  #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+    if (!custom)
+  #endif
+      lcd_goto_screen(lcd_status_screen);
+  }
+  #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+  else if (custom) {
+    bootscreen_done = false;
+    boot_scroll_idx = 0;
+    boot_scroll_max = CUSTOM_BOOTSCREEN_TIMEOUT / LCD_UPDATE_INTERVAL;
+    lcd_goto_screen(lcd_custom_bootscreen);
+  }
+  #endif
+  else if (!finish) {
+    bootscreen_done = false;
+    boot_scroll_idx = 0;
+    #ifdef STRING_SPLASH_LINE1
+      boot_scroll_max = 2*LCD_WIDTH + utf8_strlen_P(PSTR(STRING_SPLASH_LINE1));
+    #else
+      boot_scroll_max = 0;
+    #endif
+    #ifdef STRING_SPLASH_LINE2
+      #if ENABLED(DOGLCD)
+        /* both lines are displayed synchronously */ 
+        boot_scroll_max = MAX(boot_scroll_max, 2*LCD_WIDTH + utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)));
+      #else
+        boot_scroll_max += 2*LCD_WIDTH + utf8_strlen_P(PSTR(STRING_SPLASH_LINE2));
+      #endif
+    #endif
+    boot_scroll_max = MAX(boot_scroll_max, BOOTSCREEN_TIMEOUT / LCD_UPDATE_INTERVAL); // minimum time BOOTSCREEN_TIMEOUT
+    lcd_goto_screen(lcd_boot_screen);
+  }
+  else {
+    // nothing to do
+  }
+
+  return (bootscreen_done);
+}
+#endif
+
 /**
  * Reset the status message
  */
@@ -770,6 +829,7 @@ void lcd_reset_status() {
   static const char printing[] PROGMEM = MSG_PRINTING;
   static const char welcome[] PROGMEM = WELCOME_MSG;
   const char *msg;
+
   if (print_job_timer.isPaused())
     msg = paused;
   #if ENABLED(SDSUPPORT)
@@ -793,6 +853,10 @@ void kill_screen(const char* lcd_msg) {
   lcd_init();
   lcd_setalertstatusPGM(lcd_msg);
   lcd_kill_screen();
+#if ENABLED(SHOW_BOOTSCREEN)
+  bootscreen_done = false;
+  boot_scroll_idx = 0;
+#endif
 }
 
 /**
@@ -1141,7 +1205,11 @@ void lcd_quick_feedback(const bool clear_buttons) {
   void lcd_main_menu() {
     START_MENU();
     MENU_BACK(MSG_WATCH);
-
+    
+    if (planner.movesplanned() || IS_SD_PRINTING) {
+      MENU_ITEM(submenu, MSG_TUNE, lcd_tune_menu);
+    }
+    
     #if ENABLED(CUSTOM_USER_MENUS)
       MENU_ITEM(submenu, MSG_USER_MENU, _lcd_user_menu);
     #endif
@@ -1161,13 +1229,17 @@ void lcd_quick_feedback(const bool clear_buttons) {
     // Set Case light on/off/brightness
     //
     #if ENABLED(MENU_ITEM_CASE_LIGHT)
-      if (USEABLE_HARDWARE_PWM(CASE_LIGHT_PIN)) {
-        MENU_ITEM(submenu, MSG_CASE_LIGHT, case_light_menu);
-      }
-      else
-        MENU_ITEM_EDIT_CALLBACK(bool, MSG_CASE_LIGHT, (bool*)&case_light_on, update_case_light);
-    #endif
-
+      #if ENABLED(CASE_LIGHT_USE_NEOPIXEL)
+          MENU_ITEM(submenu, MSG_CASE_LIGHT, case_light_menu);
+      #else
+        if (USEABLE_HARDWARE_PWM(CASE_LIGHT_PIN)) {
+          MENU_ITEM(submenu, MSG_CASE_LIGHT, case_light_menu);
+        }
+        else
+          MENU_ITEM_EDIT_CALLBACK(bool, MSG_CASE_LIGHT, (bool*)&case_light_on, update_case_light);
+      #endif
+    #endif    
+    
     #if ENABLED(SDSUPPORT)
       if (card.cardOK) {
         if (card.isFileOpen()) {
@@ -1192,9 +1264,7 @@ void lcd_quick_feedback(const bool clear_buttons) {
       }
     #endif // SDSUPPORT
 
-    if (planner.movesplanned() || IS_SD_PRINTING)
-      MENU_ITEM(submenu, MSG_TUNE, lcd_tune_menu);
-    else {
+    if (!(planner.movesplanned() || IS_SD_PRINTING)) {
       MENU_ITEM(submenu, MSG_MOTION, lcd_movement_menu);
       MENU_ITEM(submenu, MSG_TEMPERATURE, lcd_temperature_menu);
       MENU_ITEM(submenu, MSG_CONFIGURATION, lcd_configuration_menu);
@@ -5283,6 +5353,10 @@ void lcd_init() {
   #if ENABLED(ULTIPANEL)
     encoderDiff = 0;
   #endif
+  #if ENABLED(SHOW_BOOTSCREEN)
+    bootscreen_done = false;
+    boot_scroll_idx = 0;
+  #endif
 }
 
 bool lcd_blink() {
@@ -5377,7 +5451,7 @@ void lcd_update() {
       lcd_sd_status = sd_status;
 
       if (sd_status) {
-        safe_delay(500); // Some boards need a delay to get settled
+        safe_delay(500, true); // Some boards need a delay to get settled
         card.initsd();
         if (old_sd_status == 2)
           card.beginautostart();  // Initial boot
@@ -5503,6 +5577,24 @@ void lcd_update() {
         return_to_status_ms = ms + LCD_TIMEOUT_TO_STATUS;
       }
     #endif
+    
+    #if ENABLED(SHOW_BOOTSCREEN)
+    {
+      if (((currentScreen == lcd_boot_screen)
+        #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+          || (currentScreen == lcd_custom_bootscreen) 
+        #endif
+          )
+        && (boot_scroll_idx < boot_scroll_max) 
+        )
+      {
+        boot_scroll_idx++;
+        lcd_status_update_delay = 12;
+        lcdDrawUpdate = LCDVIEW_REDRAW_NOW;
+        return_to_status_ms = ms + LCD_TIMEOUT_TO_STATUS;      
+      }
+    }
+    #endif
 
     // then we want to use 1/2 of the time only.
     uint16_t bbr2 = planner.block_buffer_runtime() >> 1;
@@ -5587,7 +5679,11 @@ void lcd_update() {
       // Return to Status Screen after a timeout
       if (currentScreen == lcd_status_screen || defer_return_to_status)
         return_to_status_ms = ms + LCD_TIMEOUT_TO_STATUS;
-      else if (ELAPSED(ms, return_to_status_ms))
+      else if (ELAPSED(ms, return_to_status_ms)
+//      #if ENABLED(SHOW_BOOTSCREEN)
+//        && bootscreen_done
+//      #endif
+        )
         lcd_return_to_status();
 
     #endif // ULTIPANEL

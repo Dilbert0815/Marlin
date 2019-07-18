@@ -226,6 +226,7 @@ static void lcd_setFont(const char font_nr) {
   #if ENABLED(SHOW_CUSTOM_BOOTSCREEN)
 
     void lcd_custom_bootscreen() {
+
       constexpr u8g_uint_t left = (LCD_PIXEL_WIDTH  - (CUSTOM_BOOTSCREEN_BMPWIDTH)) / 2,
                            top = (LCD_PIXEL_HEIGHT - (CUSTOM_BOOTSCREEN_BMPHEIGHT)) / 2;
       #if ENABLED(CUSTOM_BOOTSCREEN_INVERTED)
@@ -246,42 +247,72 @@ static void lcd_setFont(const char font_nr) {
           if (bottom < LCD_PIXEL_HEIGHT) u8g.drawBox(0, bottom, LCD_PIXEL_WIDTH, LCD_PIXEL_HEIGHT - bottom);
         #endif
       } while (u8g.nextPage());
-      safe_delay(CUSTOM_BOOTSCREEN_TIMEOUT);
+
     }
 
   #endif // SHOW_CUSTOM_BOOTSCREEN
 
-  void lcd_bootscreen() {
-    #if ENABLED(SHOW_CUSTOM_BOOTSCREEN)
-      lcd_custom_bootscreen();
-    #endif
+  void lcd_boot_screen() {
+      constexpr uint8_t offy =
+        #if ENABLED(START_BMPHIGH)
+          (LCD_PIXEL_HEIGHT - (START_BMPHEIGHT)) / 2
+        #else
+          DOG_CHAR_HEIGHT
+        #endif
+      ;
 
-    constexpr uint8_t offy =
-      #if ENABLED(START_BMPHIGH)
-        (LCD_PIXEL_HEIGHT - (START_BMPHEIGHT)) / 2
-      #else
-        DOG_CHAR_HEIGHT
-      #endif
-    ;
+      const uint8_t width = u8g.getWidth(), height = u8g.getHeight(),
+                    offx = (width - (START_BMPWIDTH)) / 2;
+      char txt[LCD_WIDTH + 2];
 
-    const uint8_t width = u8g.getWidth(), height = u8g.getHeight(),
-                  offx = (width - (START_BMPWIDTH)) / 2;
+      u8g.firstPage();
+      do {
+        uint8_t idx = MIN(MAX(0, boot_scroll_idx - LCD_WIDTH),
+                          MAX(0, utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) - LCD_WIDTH - 1));
 
-    u8g.firstPage();
-    do {
-      u8g.drawBitmapP(offx, offy, (START_BMPWIDTH + 7) / 8, START_BMPHEIGHT, start_bmp);
-      lcd_setFont(FONT_MENU);
-      #ifndef STRING_SPLASH_LINE2
-        const uint8_t txt1X = width - (sizeof(STRING_SPLASH_LINE1) - 1) * (DOG_CHAR_WIDTH);
-        u8g.drawStr(txt1X, (height + DOG_CHAR_HEIGHT) / 2, STRING_SPLASH_LINE1);
-      #else
-        const uint8_t txt1X = (width - (sizeof(STRING_SPLASH_LINE1) - 1) * (DOG_CHAR_WIDTH)) / 2,
-                      txt2X = (width - (sizeof(STRING_SPLASH_LINE2) - 1) * (DOG_CHAR_WIDTH)) / 2;
-        u8g.drawStr(txt1X, height - (DOG_CHAR_HEIGHT) * 3 / 2, STRING_SPLASH_LINE1);
-        u8g.drawStr(txt2X, height - (DOG_CHAR_HEIGHT) * 1 / 2, STRING_SPLASH_LINE2);
-      #endif
-    } while (u8g.nextPage());
-    safe_delay(BOOTSCREEN_TIMEOUT);
+        u8g.drawBitmapP(offx, offy, (START_BMPWIDTH + 7) / 8, START_BMPHEIGHT, start_bmp);
+        lcd_setFont(FONT_MENU);
+        #ifndef STRING_SPLASH_LINE2
+          uint8_t txtX = ((width - utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) * (DOG_CHAR_WIDTH)) / 2);
+          if (utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) > LCD_WIDTH)
+          {
+            txtX = 0;
+          }
+          else {
+            idx = 0;
+          }
+          strncpy(txt, STRING_SPLASH_LINE1+idx, LCD_WIDTH+1);
+          txt[LCD_WIDTH + 1] = '\0';
+          u8g.drawStr(txtX, height - DOG_CHAR_HEIGHT, txt);
+
+        #else
+          uint8_t txtX = ((width - utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) * (DOG_CHAR_WIDTH)) / 2);
+          if (utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) > LCD_WIDTH)
+          {
+            txtX = 0;
+          }
+          else {
+            idx = 0;
+          }
+          strncpy(txt, STRING_SPLASH_LINE1+idx, LCD_WIDTH+1);
+          txt[LCD_WIDTH + 1] = '\0';
+          u8g.drawStr(txtX, height - (DOG_CHAR_HEIGHT) * 3 / 2, txt);
+
+          idx = MIN(MAX(0, boot_scroll_idx - LCD_WIDTH), 
+                    MAX(0,utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) - LCD_WIDTH - 1));
+          txtX = ((width - utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) * (DOG_CHAR_WIDTH)) / 2);
+          if (utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) > LCD_WIDTH)
+          {
+            txtX = 0;
+          }
+          else {
+            idx = 0;
+          }
+          strncpy(txt, STRING_SPLASH_LINE2+idx, LCD_WIDTH+1);
+          txt[LCD_WIDTH + 1] = '\0';
+          u8g.drawStr(txtX, height - (DOG_CHAR_HEIGHT) / 2, txt);
+        #endif
+      } while (u8g.nextPage());
   }
 
 #endif // SHOW_BOOTSCREEN

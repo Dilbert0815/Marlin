@@ -307,7 +307,7 @@ float zprobe_zoffset; // Initialized by settings.load()
       bltouch_command(BLTOUCH_RESET);    //  try to reset it.
       bltouch_command(BLTOUCH_DEPLOY);   // Also needs to deploy and stow to
       bltouch_command(BLTOUCH_STOW);     //  clear the triggered condition.
-      safe_delay(1500);                  // Wait for internal self-test to complete.
+      safe_delay(1500, true);                  // Wait for internal self-test to complete.
                                          //  (Measured completion time was 0.65 seconds
                                          //   after reset, deploy, and stow sequence)
       if (TEST_BLTOUCH()) {              // If it still claims to be triggered...
@@ -496,7 +496,7 @@ static bool do_probe_move(const float z, const float fr_mm_s) {
     if (thermalManager.isHeatingBed()) {
       serialprintPGM(msg_wait_for_bed_heating);
       LCD_MESSAGEPGM(MSG_BED_HEATING);
-      while (thermalManager.isHeatingBed()) safe_delay(200);
+      while (thermalManager.isHeatingBed()) safe_delay(200, true);
       lcd_reset_status();
     }
   #endif

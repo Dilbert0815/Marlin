@@ -147,10 +147,10 @@ inline void servo_probe_test() {
     bool deploy_state, stow_state;
     do {
       MOVE_SERVO(probe_index, servo_angles[Z_PROBE_SERVO_NR][0]); // Deploy
-      safe_delay(500);
+      safe_delay(500, true);
       deploy_state = READ(PROBE_TEST_PIN);
       MOVE_SERVO(probe_index, servo_angles[Z_PROBE_SERVO_NR][1]); // Stow
-      safe_delay(500);
+      safe_delay(500, true);
       stow_state = READ(PROBE_TEST_PIN);
     } while (++i < 4);
     if (probe_inverting != deploy_state) SERIAL_PROTOCOLLNPGM("WARNING - INVERTING setting probably backwards");
@@ -171,7 +171,7 @@ inline void servo_probe_test() {
     }
     else {                                           // measure active signal length
       MOVE_SERVO(probe_index, servo_angles[Z_PROBE_SERVO_NR][0]); // Deploy
-      safe_delay(500);
+      safe_delay(500, true);
       SERIAL_PROTOCOLLNPGM("please trigger probe");
       uint16_t probe_counter = 0;
 
@@ -316,7 +316,7 @@ void GcodeSuite::M43() {
         }
       #endif
 
-      safe_delay(200);
+      safe_delay(200, true);
     }
     return;
   }

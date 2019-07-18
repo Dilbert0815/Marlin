@@ -40,8 +40,10 @@
   /**
    * Marlin release version identifier
    */
-  #define SHORT_BUILD_VERSION "bugfix-2.0.x"
-
+  //#define SHORT_BUILD_VERSION "bugfix-2.0.x" //12 char 
+  //#define SHORT_BUILD_VERSION "2.0.x-bug" //9 char 
+  #define SHORT_BUILD_VERSION "2.0.x-bugfix.very.long.test" //27 char
+  
   /**
    * Verbose version identifier which should contain a reference to the location
    * from where the binary was downloaded or the source code was compiled.

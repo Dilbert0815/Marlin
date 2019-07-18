@@ -848,6 +848,26 @@ void setup() {
     OUT_WRITE(STAT_LED_BLUE_PIN, LOW); // turn it off
   #endif
 
+  lcd_init();
+  lcd_reset_status();
+
+  #if ENABLED(SHOW_BOOTSCREEN)
+    #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+      lcd_bootscreen(false, true);
+      do {
+        safe_delay(100, true);
+      }
+      while (!lcd_bootscreen(true, true));
+    #endif
+
+    lcd_bootscreen(false
+    #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+      , false
+    #endif
+      );
+    //safe_delay(100, true);
+  #endif
+
   #if HAS_COLOR_LEDS
     leds.setup();
   #endif
@@ -871,12 +891,18 @@ void setup() {
     fanmux_init();
   #endif
 
-  lcd_init();
-  lcd_reset_status();
-
   #if ENABLED(SHOW_BOOTSCREEN)
-    lcd_bootscreen();
+    do {
+      safe_delay(100, true);
+    }
+    while (!lcd_bootscreen(true
+    #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+      , false
+    #endif
+      ));
   #endif
+
+  lcd_reset_status();
 
   #if ENABLED(MIXING_EXTRUDER) && MIXING_VIRTUAL_TOOLS > 1
     mixing_tools_init();
@@ -952,13 +978,21 @@ void loop() {
         quickstop_stepper();
         print_job_timer.stop();
         thermalManager.disable_all_heaters();
-        #if FAN_COUNT > 0
+      #if FAN_COUNT > 0
           for (uint8_t i = 0; i < FAN_COUNT; i++) fanSpeeds[i] = 0;
-        #endif
+      #endif
         wait_for_heatup = false;
-        #if ENABLED(POWER_LOSS_RECOVERY)
-          card.removeJobRecoveryFile();
-        #endif
+      #if ENABLED(POWER_LOSS_RECOVERY)
+        card.removeJobRecoveryFile();
+      #endif
+        
+      #if ENABLED(PRINTER_EVENT_LEDS)
+        leds.set_off();
+      #endif // PRINTER_EVENT_LEDS
+      #if HAS_CASE_LIGHT
+        safe_delay(2000, true);
+        update_case_light();
+      #endif // PRINTER_EVENT_LEDS
       }
     #endif // SDSUPPORT && ULTIPANEL
 

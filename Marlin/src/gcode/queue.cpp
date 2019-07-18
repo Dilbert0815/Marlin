@@ -464,8 +464,12 @@ inline void get_serial_commands() {
                   #endif
                 ));
               #else
-                safe_delay(2000);
+                safe_delay(2000, true);
                 leds.set_off();
+                #if HAS_CASE_LIGHT
+                  safe_delay(500, true);
+                  update_case_light();
+                #endif // HAS_CASE_LIGHT
               #endif
             #endif // PRINTER_EVENT_LEDS
           }

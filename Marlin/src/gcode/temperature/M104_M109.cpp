@@ -196,7 +196,13 @@ void GcodeSuite::M109() {
         if (blue != old_blue) {
           old_blue = blue;
           leds.set_color(
-            MakeLEDColor(255, 0, blue, 0, pixels.getBrightness())
+            MakeLEDColor(255, 0, blue, 0, 
+            #if ENABLED(NEOPIXEL_LED)
+              NEOPIXEL_BRIGHTNESS
+            #else
+              pixels.getBrightness()
+            #endif
+              )
             #if ENABLED(NEOPIXEL_IS_SEQUENTIAL)
               , true
             #endif

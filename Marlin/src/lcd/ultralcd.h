@@ -80,10 +80,19 @@
   #if ENABLED(DOGLCD)
     extern int16_t lcd_contrast;
     void set_lcd_contrast(const int16_t value);
+    #if ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+      void lcd_custom_bootscreen();
+    #endif
   #endif
-
   #if ENABLED(SHOW_BOOTSCREEN)
-    void lcd_bootscreen();
+    bool lcd_bootscreen(const bool finish = false
+      #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+        , const bool custom = false
+      #endif
+        ); 
+    void lcd_boot_screen();
+    extern bool bootscreen_done;
+    extern uint8_t boot_scroll_idx, boot_scroll_max;
   #endif
 
   #define LCD_UPDATE_INTERVAL 100

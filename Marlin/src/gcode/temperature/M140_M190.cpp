@@ -134,7 +134,13 @@ void GcodeSuite::M190() {
         if (red != old_red) {
           old_red = red;
           leds.set_color(
-            MakeLEDColor(red, 0, 255, 0, pixels.getBrightness())
+            MakeLEDColor(red, 0, 255, 0,
+            #if ENABLED(NEOPIXEL_LED)
+              NEOPIXEL_BRIGHTNESS
+            #else
+              pixels.getBrightness()
+            #endif
+              )
             #if ENABLED(NEOPIXEL_IS_SEQUENTIAL)
               , true
             #endif

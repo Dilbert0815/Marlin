@@ -226,7 +226,8 @@
     #define LCD_WIDTH 20
     #define LCD_HEIGHT 4
   #endif
-
+  #define ULTIPANEL
+  
 #elif ENABLED(LCD_I2C_PANELOLU2)
 
   // PANELOLU2 LCD with status LEDs, separate encoder and click inputs

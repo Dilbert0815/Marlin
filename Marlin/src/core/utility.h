@@ -27,7 +27,7 @@
 
 constexpr char axis_codes[XYZE] = { 'X', 'Y', 'Z', 'E' };
 
-void safe_delay(millis_t ms);
+extern void safe_delay(millis_t ms, bool update = false);
 
 #if ENABLED(EEPROM_SETTINGS)
   void crc16(uint16_t *crc, const void * const data, uint16_t cnt);

@@ -72,7 +72,7 @@
     #endif
     {
       MOVE_SERVO(_SERVO_NR(e), servo_angles[_SERVO_NR(e)][e]);
-      safe_delay(500);
+      safe_delay(500, true);
     }
   }
 
@@ -83,7 +83,7 @@
   void move_nozzle_servo(const uint8_t e) {
     planner.synchronize();
     MOVE_SERVO(SWITCHING_NOZZLE_SERVO_NR, servo_angles[SWITCHING_NOZZLE_SERVO_NR][e]);
-    safe_delay(500);
+    safe_delay(500, true);
   }
 
 #endif // SWITCHING_NOZZLE
@@ -267,7 +267,7 @@
       if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("(3) Unlock and Place Toolhead");
     #endif
     MOVE_SERVO(SWITCHING_TOOLHEAD_SERVO_NR, angles[1]);
-    safe_delay(500);
+    safe_delay(500, true);
 
     current_position[Y_AXIS] = SWITCHING_TOOLHEAD_Y_POS;
     #if ENABLED(DEBUG_LEVELING_FEATURE)
@@ -275,7 +275,7 @@
     #endif
     planner.buffer_line(current_position,(planner.max_feedrate_mm_s[Y_AXIS] * 0.5), active_extruder);
     planner.synchronize();
-    safe_delay(200);
+    safe_delay(200, true);
     current_position[Y_AXIS] -= SWITCHING_TOOLHEAD_Y_CLEAR;
     #if ENABLED(DEBUG_LEVELING_FEATURE)
       if (DEBUGGING(LEVELING)) DEBUG_POS("Move back Y clear", current_position);
@@ -311,9 +311,9 @@
     planner.buffer_line(current_position, planner.max_feedrate_mm_s[Y_AXIS] * 0.5, active_extruder);
     planner.synchronize();
 
-    safe_delay(200);
+    safe_delay(200, true);
     MOVE_SERVO(SWITCHING_TOOLHEAD_SERVO_NR, angles[0]);
-    safe_delay(500);
+    safe_delay(500, true);
 
     current_position[Y_AXIS] -= SWITCHING_TOOLHEAD_Y_CLEAR;
     #if ENABLED(DEBUG_LEVELING_FEATURE)

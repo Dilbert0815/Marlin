@@ -34,6 +34,10 @@
   #include "../../core/utility.h"
 #endif
 
+#if HAS_CASE_LIGHT
+  #include "../caselight.h"
+#endif
+
 Adafruit_NeoPixel pixels(NEOPIXEL_PIXELS, NEOPIXEL_PIN, NEOPIXEL_TYPE + NEO_KHZ800);
 
 void set_neopixel_color(const uint32_t color) {
@@ -49,19 +53,59 @@ void setup_neopixel() {
   pixels.show(); // initialize to all off
 
   #if ENABLED(NEOPIXEL_STARTUP_TEST)
-    safe_delay(1000);
-    set_neopixel_color(pixels.Color(255, 0, 0, 0));  // red
-    safe_delay(1000);
-    set_neopixel_color(pixels.Color(0, 255, 0, 0));  // green
-    safe_delay(1000);
-    set_neopixel_color(pixels.Color(0, 0, 255, 0));  // blue
-    safe_delay(1000);
+    #if ENABLED(NEOPIXEL_IS_SEQUENTIAL)
+      #define SEQ_TIME 100 //250
+      #if NEOPIXEL_IS_RGBW
+        uint32_t color = pixels.Color(0, 0, 0, 255);  //white
+      #else
+        uint32_t color = pixels.Color(255, 255, 255, 255);  //white
+      #endif
+      for (uint16_t i = 0; i < pixels.numPixels(); ++i) {
+        safe_delay(SEQ_TIME, true);
+        pixels.setPixelColor(i, color);
+        pixels.show();
+      }
+
+      color = pixels.Color(255, 0, 0, 0);  // red
+      for (uint16_t i = 0; i < pixels.numPixels(); ++i) {
+        safe_delay(SEQ_TIME, true);
+        pixels.setPixelColor(i, color);
+        pixels.show();
+      }
+
+      color = pixels.Color(0, 255, 0, 0);  // green
+      for (uint16_t i = 0; i < pixels.numPixels(); ++i) {
+        safe_delay(SEQ_TIME, true);
+        pixels.setPixelColor(i, color);
+        pixels.show();
+      }
+
+      color = pixels.Color(0, 0, 255, 0);  // blue
+      for (uint16_t i = 0; i < pixels.numPixels(); ++i) {
+        safe_delay(SEQ_TIME, true);
+        pixels.setPixelColor(i, color);
+        pixels.show();
+      }
+
+    #else
+      safe_delay(1000, true);
+      set_neopixel_color(pixels.Color(255, 0, 0, 0));  // red
+      safe_delay(1000, true);
+      set_neopixel_color(pixels.Color(0, 255, 0, 0));  // green
+      safe_delay(1000, true);
+      set_neopixel_color(pixels.Color(0, 0, 255, 0));  // blue
+      safe_delay(1000, true);
+    #endif
   #endif
 
-  #if ENABLED(LED_USER_PRESET_STARTUP)
-    set_neopixel_color(pixels.Color(LED_USER_PRESET_RED, LED_USER_PRESET_GREEN, LED_USER_PRESET_BLUE, LED_USER_PRESET_WHITE));
+  #if HAS_CASE_LIGHT && ENABLED(CASE_LIGHT_USE_NEOPIXEL)
+    update_case_light();
   #else
-    set_neopixel_color(pixels.Color(0, 0, 0, 0));
+    #if ENABLED(LED_USER_PRESET_STARTUP)
+      set_neopixel_color(pixels.Color(LED_USER_PRESET_RED, LED_USER_PRESET_GREEN, LED_USER_PRESET_BLUE, LED_USER_PRESET_WHITE));
+    #else
+      set_neopixel_color(pixels.Color(0, 0, 0, 0));
+    #endif
   #endif
 }
 

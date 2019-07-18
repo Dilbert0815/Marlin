@@ -167,7 +167,7 @@ void I2CPositionEncoder::update() {
         //kill("Significant Error");
         SERIAL_ECHOPGM("Axis error greater than set threshold, aborting!");
         SERIAL_ECHOLN(error);
-        safe_delay(5000);
+        safe_delay(5000, true);
       }
     #endif
 
@@ -366,7 +366,7 @@ bool I2CPositionEncoder::test_axis() {
   if (!trusted) {
     int32_t startWaitingTime = millis();
     while (!trusted && millis() - startWaitingTime < I2CPE_TIME_TRUSTED)
-      safe_delay(500);
+      safe_delay(500, true);
   }
 
   if (trusted) { // if trusted, commence test
@@ -731,7 +731,7 @@ void I2CPositionEncodersMgr::change_module_address(const uint8_t oldaddr, const 
   SERIAL_ECHOLNPGM("Address changed, resetting and waiting for confirmation..");
 
   // Wait for the module to reset (can probably be improved by polling address with a timeout).
-  safe_delay(I2CPE_REBOOT_TIME);
+  safe_delay(I2CPE_REBOOT_TIME, true);
 
   // Look for the module at the new address.
   Wire.beginTransmission(newaddr);

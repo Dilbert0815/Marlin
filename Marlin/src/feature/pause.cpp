@@ -299,7 +299,7 @@ bool unload_filament(const float &unload_length, const bool show_lcd/*=false*/,
   do_pause_e_move(-FILAMENT_UNLOAD_RETRACT_LENGTH, PAUSE_PARK_RETRACT_FEEDRATE);
 
   // Wait for filament to cool
-  safe_delay(FILAMENT_UNLOAD_DELAY);
+  safe_delay(FILAMENT_UNLOAD_DELAY, true);
 
   // Quickly purge
   do_pause_e_move(FILAMENT_UNLOAD_RETRACT_LENGTH + FILAMENT_UNLOAD_PURGE_LENGTH, planner.max_feedrate_mm_s[E_AXIS]);
@@ -319,7 +319,7 @@ bool unload_filament(const float &unload_length, const bool show_lcd/*=false*/,
   // Disable extruders steppers for manual filament changing (only on boards that have separate ENABLE_PINS)
   #if E0_ENABLE_PIN != X_ENABLE_PIN && E1_ENABLE_PIN != Y_ENABLE_PIN
     disable_e_stepper(active_extruder);
-    safe_delay(100);
+    safe_delay(100, true);
   #endif
 
   return true;

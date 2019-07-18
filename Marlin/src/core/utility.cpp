@@ -24,12 +24,18 @@
 
 #include "../Marlin.h"
 #include "../module/temperature.h"
+#if ENABLED(SHOW_BOOTSCREEN)
+  #include "../lcd/ultralcd.h"
+#endif
 
-void safe_delay(millis_t ms) {
+void safe_delay(millis_t ms, bool update = false) {
   while (ms > 50) {
     ms -= 50;
     delay(50);
     thermalManager.manage_heater();
+  #if ENABLED(SHOW_BOOTSCREEN)
+    if (update) lcd_update();
+  #endif
   }
   delay(ms);
   thermalManager.manage_heater(); // This keeps us safe if too many small safe_delay() calls are made
