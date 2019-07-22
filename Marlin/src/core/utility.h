@@ -26,7 +26,8 @@
 constexpr char axis_codes[XYZE] = { 'X', 'Y', 'Z', 'E' };
 
 // Delay that ensures heaters and watchdog are kept alive
-void safe_delay(millis_t ms);
+//void safe_delay(millis_t ms);
+void safe_delay(millis_t ms, bool update = false);
 
 // A delay to provide brittle hosts time to receive bytes
 inline void serial_delay(const millis_t ms) {

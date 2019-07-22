@@ -97,7 +97,10 @@ void LEDLights::set_color(const LEDColor &incol
     #endif
     pixels.setBrightness(incol.i);
     if (!isSequence)
+    {
       set_neopixel_color(neocolor);
+      nextLed = 0;
+    }
     else {
       pixels.setPixelColor(nextLed, neocolor);
       pixels.show();

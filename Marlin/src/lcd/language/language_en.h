@@ -460,6 +460,9 @@
 #ifndef MSG_UBL_RESTORE_ERROR
   #define MSG_UBL_RESTORE_ERROR               _UxGT("Err: UBL Restore")
 #endif
+#ifndef MSG_UBL_ERR_Z_PROBE
+  #define MSG_UBL_ERR_Z_PROBE                 _UxGT("Err: Z-Probe !")
+#endif
 #ifndef MSG_UBL_Z_OFFSET_STOPPED
   #define MSG_UBL_Z_OFFSET_STOPPED            _UxGT("Z-Offset Stopped")
 #endif

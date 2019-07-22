@@ -411,7 +411,85 @@ void MarlinUI::clear_lcd() { lcd.clear(); }
     lcd_moveto(indent, 2); lcd_put_wchar('\x02'); lcd_put_u8str_P(PSTR( "------" ));  lcd_put_wchar('\x03');
   }
 
-  void MarlinUI::show_bootscreen() {
+  void MarlinUI::bootscreen(void) {
+    set_custom_characters(CHARSET_BOOT);
+    lcd.clear();
+
+    #define LCD_EXTRA_SPACE (LCD_WIDTH-8)
+
+    #define CENTER_OR_SCROLL(STRING,DELAY) \
+      lcd_erase_line(3); \
+      if (utf8_strlen(STRING) <= LCD_WIDTH) { \
+        lcd_moveto((LCD_WIDTH - utf8_strlen_P(PSTR(STRING))) / 2, 3); \
+        lcd_put_u8str_P(PSTR(STRING)); \
+        safe_delay(DELAY); \
+      } \
+      else { \
+        lcd_scroll(0, 3, PSTR(STRING), LCD_WIDTH, DELAY); \
+      }
+
+    #ifdef STRING_SPLASH_LINE1
+      //
+      // Show the Marlin logo with splash line 1
+      //
+      if (LCD_EXTRA_SPACE >= utf8_strlen(STRING_SPLASH_LINE1) + 1) {
+        //
+        // Show the Marlin logo, splash line1, and splash line 2
+        //
+        logo_lines(PSTR(" " STRING_SPLASH_LINE1));
+        #ifdef STRING_SPLASH_LINE2
+          CENTER_OR_SCROLL(STRING_SPLASH_LINE2, 2000);
+        #else
+          safe_delay(2000, true);
+        #endif
+      }
+      else {
+        //
+        // Show the Marlin logo with splash line 1
+        // After a delay show splash line 2, if it exists
+        //
+        #ifdef STRING_SPLASH_LINE2
+          #define _SPLASH_WAIT_1 1500
+        #else
+          #define _SPLASH_WAIT_1 2000
+        #endif
+        logo_lines(PSTR(""));
+        CENTER_OR_SCROLL(STRING_SPLASH_LINE1, _SPLASH_WAIT_1);
+        #ifdef STRING_SPLASH_LINE2
+          CENTER_OR_SCROLL(STRING_SPLASH_LINE2, 1500, true);
+          #ifdef STRING_SPLASH_LINE3
+            CENTER_OR_SCROLL(STRING_SPLASH_LINE3, 1500, true);
+          #endif
+        #endif
+      }
+    #elif defined(STRING_SPLASH_LINE2)
+      //
+      // Show splash line 2 only, alongside the logo if possible
+      //
+      if (LCD_EXTRA_SPACE >= utf8_strlen(STRING_SPLASH_LINE2) + 1) {
+        logo_lines(PSTR(" " STRING_SPLASH_LINE2));
+        safe_delay(2000);
+      }
+      else {
+        logo_lines(PSTR(""));
+        CENTER_OR_SCROLL(STRING_SPLASH_LINE2, 2000);
+      }
+    #else
+      //
+      // Show only the Marlin logo
+      //
+      logo_lines(PSTR(""));
+      safe_delay(2000);
+    #endif
+
+    lcd.clear();
+    safe_delay(100);
+    set_custom_characters(CHARSET_INFO);
+    lcd.clear();
+  }
+
+  #if 0
+  void MarlinUI::show_bootscreen(const bool finish = false) {
     set_custom_characters(CHARSET_BOOT);
     lcd.clear();
 
@@ -487,6 +565,7 @@ void MarlinUI::clear_lcd() { lcd.clear(); }
     set_custom_characters(CHARSET_INFO);
     lcd.clear();
   }
+#endif
 
 #endif // SHOW_BOOTSCREEN
 

@@ -135,7 +135,7 @@ void MMU2::reset() {
 
   #if PIN_EXISTS(MMU2_RST)
     WRITE(MMU2_RST_PIN, LOW);
-    safe_delay(20);
+    safe_delay(20, true);
     WRITE(MMU2_RST_PIN, HIGH);
   #else
     tx_str_P(PSTR("X0\n")); // Send soft reset
@@ -488,7 +488,7 @@ void MMU2::tool_change(const char* special) {
     switch (*special) {
       case '?': {
         uint8_t index = mmu2_choose_filament();
-        while (!thermalManager.wait_for_hotend(active_extruder, false)) safe_delay(100);
+        while (!thermalManager.wait_for_hotend(active_extruder, false)) safe_delay(100, true);
         load_filament_to_nozzle(index);
       } break;
 
@@ -507,7 +507,7 @@ void MMU2::tool_change(const char* special) {
       } break;
 
       case 'c': {
-        while (!thermalManager.wait_for_hotend(active_extruder, false)) safe_delay(100);
+        while (!thermalManager.wait_for_hotend(active_extruder, false)) safe_delay(100, true);
         execute_extruder_sequence((const E_Step *)load_to_nozzle_sequence, COUNT(load_to_nozzle_sequence));
       } break;
     }
@@ -593,7 +593,7 @@ void MMU2::manage_response(const bool move_axes, const bool turn_off_nozzle) {
         LCD_MESSAGEPGM(MSG_HEATING);
         BUZZ(200, 40);
 
-        while (!thermalManager.wait_for_hotend(active_extruder, false)) safe_delay(1000);
+        while (!thermalManager.wait_for_hotend(active_extruder, false)) safe_delay(1000, true);
       }
 
       if (move_axes && all_axes_homed()) {

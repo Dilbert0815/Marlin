@@ -316,7 +316,16 @@ public:
       static inline void refresh() { refresh(LCDVIEW_CLEAR_CALL_REDRAW); }
 
       #if ENABLED(SHOW_BOOTSCREEN)
-        static void show_bootscreen();
+        static void bootscreen(void);
+        
+        static bool show_bootscreen(const bool finish = false
+        #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+            , const bool custom = false
+        #endif
+        ); 
+        //void lcd_boot_screen();
+        static bool bootscreen_done;
+        static uint8_t boot_scroll_idx, boot_scroll_max;
       #endif
 
       #if HAS_GRAPHICAL_LCD

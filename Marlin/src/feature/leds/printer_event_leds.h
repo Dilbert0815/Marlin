@@ -67,7 +67,7 @@ public:
       #if HAS_LEDS_OFF_FLAG
         leds_off_after_print = true;
       #else
-        safe_delay(2000);
+        safe_delay(2000, true);
         set_done();
       #endif
     }

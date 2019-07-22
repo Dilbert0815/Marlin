@@ -935,7 +935,7 @@ void setup() {
   ui.reset_status();
 
   #if HAS_SPI_LCD && ENABLED(SHOW_BOOTSCREEN)
-    ui.show_bootscreen();
+    ui.bootscreen();
   #endif
 
   #if ENABLED(SDIO_SUPPORT) && !PIN_EXISTS(SD_DETECT)
@@ -1151,6 +1151,14 @@ void loop() {
         #ifdef EVENT_GCODE_SD_STOP
           queue.inject_P(PSTR(EVENT_GCODE_SD_STOP));
         #endif
+        
+        #if ENABLED(PRINTER_EVENT_LEDS)
+          leds.set_off();
+        #endif // PRINTER_EVENT_LEDS
+        #if HAS_CASE_LIGHT
+          safe_delay(2000, true);
+          update_case_light();
+        #endif // PRINTER_EVENT_LEDS
       }
 
     #endif // SDSUPPORT

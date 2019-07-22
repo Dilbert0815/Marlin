@@ -93,8 +93,12 @@ class MarlinSettings {
 
     #if ENABLED(EEPROM_SETTINGS)
 
-      static bool eeprom_error, validating;
-
+      static bool eeprom_error, validating
+      #if ENABLED(DELTA)
+        , delta_changed
+      #endif
+      ;
+      
       #if ENABLED(AUTO_BED_LEVELING_UBL)  // Eventually make these available if any leveling system
                                           // That can store is enabled
         static const uint16_t meshes_end; // 128 is a placeholder for the size of the MAT; the MAT will always

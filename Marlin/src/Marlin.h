@@ -74,8 +74,9 @@ void manage_inactivity(const bool ignore_stepper_queue=false);
 #endif
 
 #define  enable_X() do{ X_enable; X2_enable; }while(0)
-#define disable_X() do{ X_disable; X2_disable; CBI(axis_known_position, X_AXIS); }while(0)
-
+//#define disable_X() do{ X_disable; X2_disable; CBI(axis_known_position, X_AXIS); }while(0)
+#define disable_X() do{ X_disable; X2_disable; }while(0)
+  
 #if AXIS_DRIVER_TYPE_Y(L6470)
   extern L6470 stepperY;
   #define Y_enable  NOOP
@@ -101,7 +102,8 @@ void manage_inactivity(const bool ignore_stepper_queue=false);
 #endif
 
 #define  enable_Y() do{ Y_enable; Y2_enable; }while(0)
-#define disable_Y() do{ Y_disable; Y2_disable; CBI(axis_known_position, Y_AXIS); }while(0)
+//#define disable_Y() do{ Y_disable; Y2_disable; CBI(axis_known_position, Y_AXIS); }while(0)
+#define disable_Y() do{ Y_disable; Y2_disable; }while(0)
 
 #if AXIS_DRIVER_TYPE_Z(L6470)
   extern L6470 stepperZ;
@@ -140,7 +142,8 @@ void manage_inactivity(const bool ignore_stepper_queue=false);
 #endif
 
 #define  enable_Z() do{ Z_enable; Z2_enable; Z3_enable; }while(0)
-#define disable_Z() do{ Z_disable; Z2_disable; Z3_disable; CBI(axis_known_position, Z_AXIS); }while(0)
+//#define disable_Z() do{ Z_disable; Z2_disable; Z3_disable; CBI(axis_known_position, Z_AXIS); }while(0)
+#define disable_Z() do{ Z_disable; Z2_disable; Z3_disable; }while(0)
 
 //
 // Extruder Stepper enable / disable

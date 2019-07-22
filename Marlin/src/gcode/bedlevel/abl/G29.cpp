@@ -36,7 +36,8 @@
 #include "../../../module/probe.h"
 #include "../../queue.h"
 
-#if BOTH(LCD_BED_LEVELING, PROBE_MANUALLY)
+//#if BOTH(LCD_BED_LEVELING, PROBE_MANUALLY)
+#if ENABLED(FIX_MOUNTED_PROBE) || (ENABLED(LCD_BED_LEVELING) && ENABLED(PROBE_MANUALLY))
   #include "../../../lcd/ultralcd.h"
 #endif
 
@@ -433,6 +434,24 @@ G29_TYPE GcodeSuite::G29() {
       SERIAL_EOL();
     }
 
+  #if ENABLED(FIX_MOUNTED_PROBE)
+    #if ENABLED(Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN)
+      bool z_probe = (READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING);
+    #elif ENABLED(Z_MIN_PROBE_ENDSTOP)
+      bool z_probe = (READ(Z_MIN_PIN) != Z_MIN_PROBE_PIN);
+    #else
+      bool z_probe = (READ(Z_MAX_PIN) != Z_MAN_ENDSTOP_INVERTING);;
+    #endif
+    if (z_probe) {
+      LCD_MESSAGEPGM(MSG_UBL_ERR_Z_PROBE);
+      SERIAL_ERROR_MSG("\n Z-Probe stuck before probe!!");
+      return;
+    }
+    else if (verbose_level > 2) {
+      SERIAL_ECHO_MSG("\n  Z-Probe deployed");
+    }
+  #endif
+    
     planner.synchronize();
 
     // Disable auto bed leveling during G29.

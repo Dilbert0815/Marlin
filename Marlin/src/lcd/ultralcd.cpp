@@ -22,7 +22,8 @@
 
 #include "../inc/MarlinConfigPre.h"
 
-#ifdef LED_BACKLIGHT_TIMEOUT
+//#ifdef LED_BACKLIGHT_TIMEOUT
+#if ENABLED(LED_BACKLIGHT_TIMEOUT) || ENABLED(PRINTER_EVENT_LEDS)
   #include "../feature/leds/leds.h"
 #endif
 
@@ -200,7 +201,7 @@ millis_t next_button_update_ms;
 
     void MarlinUI::wait_for_release() {
       while (button_pressed()) safe_delay(50);
-      safe_delay(50);
+      safe_delay(50, true);
     }
 
   #endif
@@ -790,7 +791,7 @@ void MarlinUI::update() {
       lcd_sd_status = sd_status;
 
       if (sd_status) {
-        safe_delay(500); // Some boards need a delay to get settled
+        safe_delay(500, true); // Some boards need a delay to get settled
         card.initsd();
         if (old_sd_status == 2)
           card.beginautostart();  // Initial boot
@@ -1533,4 +1534,56 @@ void MarlinUI::update() {
     }
   #endif
 
+#if ENABLED(SHOW_BOOTSCREEN)
+  /**
+   * set boot screen
+   */
+  bool MarlinUI::show_bootscreen(const bool finish
+  #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+    , const bool custom
+  #endif
+  ) {
+
+  if (finish && (boot_scroll_idx >= boot_scroll_max)
+    ) {
+    bootscreen_done = true;
+  #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+    if (!custom)
+  #endif
+      goto_screen(status_screen);
+  }
+  #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+  else if (custom) {
+    bootscreen_done = false;
+    boot_scroll_idx = 0;
+    boot_scroll_max = CUSTOM_BOOTSCREEN_TIMEOUT / LCD_UPDATE_INTERVAL;
+    //goto_screen(custom_bootscreen);
+  }
+  #endif
+  else if (!finish) {
+    bootscreen_done = false;
+    boot_scroll_idx = 0;
+    #ifdef STRING_SPLASH_LINE1
+      boot_scroll_max = 2*LCD_WIDTH + utf8_strlen_P(PSTR(STRING_SPLASH_LINE1));
+    #else
+      boot_scroll_max = 0;
+    #endif
+    #ifdef STRING_SPLASH_LINE2
+      #if ENABLED(DOGLCD)
+        /* both lines are displayed synchronously */ 
+        boot_scroll_max = MAX(boot_scroll_max, 2*LCD_WIDTH + utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)));
+      #else
+        boot_scroll_max += 2*LCD_WIDTH + utf8_strlen_P(PSTR(STRING_SPLASH_LINE2));
+      #endif
+    #endif
+    boot_scroll_max = MAX(boot_scroll_max, BOOTSCREEN_TIMEOUT / LCD_UPDATE_INTERVAL); // minimum time BOOTSCREEN_TIMEOUT
+    goto_screen(bootscreen);
+  }
+  else {
+    // nothing to do
+  }
+  return (bootscreen_done);
+}
+#endif  
+  
 #endif // HAS_DISPLAY

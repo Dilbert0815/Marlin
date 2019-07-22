@@ -32,7 +32,7 @@ void select_multiplexed_stepper(const uint8_t e) {
   WRITE(E_MUX0_PIN, TEST(e, 0) ? HIGH : LOW);
   WRITE(E_MUX1_PIN, TEST(e, 1) ? HIGH : LOW);
   WRITE(E_MUX2_PIN, TEST(e, 2) ? HIGH : LOW);
-  safe_delay(100);
+  safe_delay(100, true);
 }
 
 #endif // MK2_MULTIPLEXER

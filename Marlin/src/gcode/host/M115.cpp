@@ -125,7 +125,11 @@ void GcodeSuite::M115() {
     );
     cap_line(PSTR("CASE_LIGHT_BRIGHTNESS")
       #if HAS_CASE_LIGHT
-        , PWM_PIN(CASE_LIGHT_PIN)
+        #if ENABLED(CASE_LIGHT_USE_NEOPIXEL)
+          , true
+        #else
+        , USEABLE_HARDWARE_PWM(CASE_LIGHT_PIN)
+        #endif
       #endif
     );
 

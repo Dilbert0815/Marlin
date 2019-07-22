@@ -265,7 +265,7 @@ void GcodeSuite::M917() {
         DEBUG_ECHOLNPGM(".");
         reset_stepper_timeout(); // reset_stepper_timeout to keep steppers powered
         watchdog_reset();   // beat the dog
-        safe_delay(5000);
+        safe_delay(5000, true);
         status_composite_temp = 0;
         for (j = 0; j < driver_count; j++) {
           axis_status[j] = (~L6470.get_status(axis_index[j])) & L6470_ERROR_MASK;    // bits of interest are all active low

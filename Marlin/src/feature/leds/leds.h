@@ -114,16 +114,28 @@ typedef struct LEDColor {
 /**
  * Color helpers and presets
  */
+#if ENABLED(NEOPIXEL_LED)
+  #define LEDBrighness() NEOPIXEL_BRIGHTNESS
+#else
+  #define LEDBrighness() pixels.getBrightness()
+#endif
 #if HAS_WHITE_LED
+  #define LEDColorWhite() LEDColor(0, 0, 0, LEDBrighness())
   #if ENABLED(NEOPIXEL_LED)
     #define MakeLEDColor(R,G,B,W,I) LEDColor(R, G, B, W, I)
   #else
     #define MakeLEDColor(R,G,B,W,I) LEDColor(R, G, B, W)
   #endif
 #else
-  #define MakeLEDColor(R,G,B,W,I)   LEDColor(R, G, B)
+  #define LEDColorWhite() LEDColor(LEDBrighness(), LEDBrighness(), LEDBrighness())
+  #if ENABLED(NEOPIXEL_LED)
+    #define MakeLEDColor(R,G,B,W,I) LEDColor(R, G, B, W, I)
+  #else
+    #define MakeLEDColor(R,G,B,W,I) LEDColor(R, G, B, W)
+  #endif
 #endif
 
+#if 0
 #define LEDColorOff()             LEDColor(  0,   0,   0)
 #define LEDColorRed()             LEDColor(255,   0,   0)
 #if ENABLED(LED_COLORS_REDUCE_GREEN)
@@ -142,6 +154,17 @@ typedef struct LEDColor {
 #else
   #define LEDColorWhite()         LEDColor(255, 255, 255)
 #endif
+#endif
+
+#define LEDColorOff()     LEDColor(  0,   0,   0, 0)
+#define LEDColorRed()     LEDColor(255,   0,   0, LEDBrighness())
+#define LEDColorOrange()  LEDColor(255,  80,   0, LEDBrighness())
+#define LEDColorYellow()  LEDColor(255, 255,   0, LEDBrighness())
+#define LEDColorGreen()   LEDColor(  0, 255,   0, LEDBrighness())
+#define LEDColorBlue()    LEDColor(  0,   0, 255, LEDBrighness())
+#define LEDColorIndigo()  LEDColor(  0, 255, 255, LEDBrighness())
+#define LEDColorViolet()  LEDColor(255,   0, 255, LEDBrighness())
+
 
 class LEDLights {
 public:

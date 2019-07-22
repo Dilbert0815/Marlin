@@ -249,7 +249,8 @@
     #define LCD_WIDTH 20
     #define LCD_HEIGHT 4
   #endif
-
+  #define ULTIPANEL
+  
 #elif ENABLED(LCD_I2C_PANELOLU2)
 
   // PANELOLU2 LCD with status LEDs, separate encoder and click inputs
@@ -600,6 +601,10 @@
 
 #if ENABLED(SLIM_LCD_MENUS)
   #define BOOT_MARLIN_LOGO_SMALL
+#endif
+
+#ifndef BOOTSCREEN_TIMEOUT
+  #define BOOTSCREEN_TIMEOUT 2500
 #endif
 
 #define IS_RE_ARM_BOARD (MB(RAMPS_14_RE_ARM_EFB) || MB(RAMPS_14_RE_ARM_EEB) || MB(RAMPS_14_RE_ARM_EFF) || MB(RAMPS_14_RE_ARM_EEF) || MB(RAMPS_14_RE_ARM_SF))

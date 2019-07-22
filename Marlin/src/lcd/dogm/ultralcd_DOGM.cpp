@@ -136,7 +136,7 @@ void MarlinUI::set_font(const MarlinFont font_nr) {
     void lcd_custom_bootscreen() {
       #if ENABLED(ANIMATED_BOOTSCREEN)
         LOOP_L_N(f, COUNT(custom_bootscreen_animation)) {
-          if (f) safe_delay(CUSTOM_BOOTSCREEN_FRAME_TIME);
+          if (f) safe_delay(CUSTOM_BOOTSCREEN_FRAME_TIME, true);
           draw_custom_bootscreen((u8g_pgm_uint8_t*)pgm_read_ptr(&custom_bootscreen_animation[f]), f == 0);
         }
       #else
@@ -145,12 +145,12 @@ void MarlinUI::set_font(const MarlinFont font_nr) {
       #ifndef CUSTOM_BOOTSCREEN_TIMEOUT
         #define CUSTOM_BOOTSCREEN_TIMEOUT 2500
       #endif
-      safe_delay(CUSTOM_BOOTSCREEN_TIMEOUT);
+      safe_delay(CUSTOM_BOOTSCREEN_TIMEOUT, true);
     }
 
   #endif // SHOW_CUSTOM_BOOTSCREEN
 
-  void MarlinUI::show_bootscreen() {
+  void MarlinUI::bootscreen(void) {
     #if ENABLED(SHOW_CUSTOM_BOOTSCREEN)
       lcd_custom_bootscreen();
     #endif
@@ -204,12 +204,9 @@ void MarlinUI::set_font(const MarlinFont font_nr) {
         u8g.drawStr(txt_offx_2, txt_base, STRING_SPLASH_LINE2);
       #endif
     } while (u8g.nextPage());
-    #ifndef BOOTSCREEN_TIMEOUT
-      #define BOOTSCREEN_TIMEOUT 2500
-    #endif
+
     safe_delay(BOOTSCREEN_TIMEOUT);
   }
-
 #endif // SHOW_BOOTSCREEN
 
 #if ENABLED(LIGHTWEIGHT_UI)

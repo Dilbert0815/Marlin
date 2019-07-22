@@ -138,7 +138,7 @@ void GcodeSuite::M240() {
       };
       do_blocking_move_to_xy(sraw[X_AXIS], sraw[Y_AXIS], get_homing_bump_feedrate(X_AXIS));
       #if PHOTO_SWITCH_MS > 0
-        safe_delay(parser.intval('D', PHOTO_SWITCH_MS));
+        safe_delay(parser.intval('D', PHOTO_SWITCH_MS), true);
       #endif
       do_blocking_move_to(raw);
     #endif
@@ -160,7 +160,7 @@ void GcodeSuite::M240() {
 
   #ifdef PHOTO_POSITION
     #if PHOTO_DELAY_MS > 0
-      safe_delay(parser.intval('P', PHOTO_DELAY_MS));
+      safe_delay(parser.intval('P', PHOTO_DELAY_MS), true);
     #endif
     do_blocking_move_to(old_pos, fr_mm_s);
     #ifdef PHOTO_RETRACT_MM

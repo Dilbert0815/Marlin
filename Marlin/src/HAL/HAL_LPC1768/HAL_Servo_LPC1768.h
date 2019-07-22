@@ -59,7 +59,7 @@ class libServo: public Servo {
 
     if (this->attach(servo_info[this->servoIndex].Pin.nbr) >= 0) {    // try to reattach
       this->write(value);
-      safe_delay(servo_delay[this->servoIndex]); // delay to allow servo to reach position
+      safe_delay(servo_delay[this->servoIndex], true); // delay to allow servo to reach position
       #if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE)
         this->detach();
       #endif

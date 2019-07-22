@@ -67,17 +67,17 @@ inline void toggle_pins() {
         if (pin == TEENSY_E2) {
           SET_OUTPUT(TEENSY_E2);
           for (int16_t j = 0; j < repeat; j++) {
-            WRITE(TEENSY_E2, LOW);  safe_delay(wait);
-            WRITE(TEENSY_E2, HIGH); safe_delay(wait);
-            WRITE(TEENSY_E2, LOW);  safe_delay(wait);
+            WRITE(TEENSY_E2, LOW);  safe_delay(wait, true);
+            WRITE(TEENSY_E2, HIGH); safe_delay(wait, true);
+            WRITE(TEENSY_E2, LOW);  safe_delay(wait, true);
           }
         }
         else if (pin == TEENSY_E3) {
           SET_OUTPUT(TEENSY_E3);
           for (int16_t j = 0; j < repeat; j++) {
-            WRITE(TEENSY_E3, LOW);  safe_delay(wait);
-            WRITE(TEENSY_E3, HIGH); safe_delay(wait);
-            WRITE(TEENSY_E3, LOW);  safe_delay(wait);
+            WRITE(TEENSY_E3, LOW);  safe_delay(wait, true);
+            WRITE(TEENSY_E3, HIGH); safe_delay(wait, true);
+            WRITE(TEENSY_E3, LOW);  safe_delay(wait, true);
           }
         }
         else
@@ -85,9 +85,9 @@ inline void toggle_pins() {
       {
         pinMode(pin, OUTPUT);
         for (int16_t j = 0; j < repeat; j++) {
-          watchdog_reset(); extDigitalWrite(pin, 0); safe_delay(wait);
-          watchdog_reset(); extDigitalWrite(pin, 1); safe_delay(wait);
-          watchdog_reset(); extDigitalWrite(pin, 0); safe_delay(wait);
+          watchdog_reset(); extDigitalWrite(pin, 0); safe_delay(wait, true);
+          watchdog_reset(); extDigitalWrite(pin, 1); safe_delay(wait, true);
+          watchdog_reset(); extDigitalWrite(pin, 0); safe_delay(wait, true);
           watchdog_reset();
         }
       }
@@ -181,10 +181,10 @@ inline void servo_probe_test() {
       SERIAL_ECHOLNPGM(". Deploy & stow 4 times");
       do {
         MOVE_SERVO(probe_index, servo_angles[Z_PROBE_SERVO_NR][0]); // Deploy
-        safe_delay(500);
+        safe_delay(500, true);
         deploy_state = READ(PROBE_TEST_PIN);
         MOVE_SERVO(probe_index, servo_angles[Z_PROBE_SERVO_NR][1]); // Stow
-        safe_delay(500);
+        safe_delay(500, true);
         stow_state = READ(PROBE_TEST_PIN);
       } while (++i < 4);
 
@@ -209,7 +209,7 @@ inline void servo_probe_test() {
 
     // Ask the user for a trigger event and measure the pulse width.
     MOVE_SERVO(probe_index, servo_angles[Z_PROBE_SERVO_NR][0]); // Deploy
-    safe_delay(500);
+    safe_delay(500, true);
     SERIAL_ECHOLNPGM("** Please trigger probe within 30 sec **");
     uint16_t probe_counter = 0;
 
@@ -353,7 +353,7 @@ void GcodeSuite::M43() {
         if (!wait_for_user) break;
       #endif
 
-      safe_delay(200);
+      safe_delay(200, true);
     }
   }
   else {
