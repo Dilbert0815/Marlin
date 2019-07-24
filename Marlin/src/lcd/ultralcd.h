@@ -274,8 +274,8 @@ public:
 
   #if HAS_DISPLAY
 
-    static void init();
-    static void update();
+    void init();
+    void update();
     static void set_alert_status_P(PGM_P message);
 
     static char status_message[];
@@ -318,14 +318,14 @@ public:
       #if ENABLED(SHOW_BOOTSCREEN)
         static void bootscreen(void);
         
-        static bool show_bootscreen(const bool finish = false
+        bool show_bootscreen(const bool finish = false
         #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
             , const bool custom = false
         #endif
         ); 
         //void lcd_boot_screen();
-        static bool bootscreen_done;
-        static uint8_t boot_scroll_idx, boot_scroll_max;
+        bool bootscreen_done;
+        uint8_t boot_scroll_idx, boot_scroll_max;
       #endif
 
       #if HAS_GRAPHICAL_LCD
@@ -381,7 +381,7 @@ public:
     #endif
 
     static bool get_blink();
-    static void kill_screen(PGM_P const lcd_msg);
+    void kill_screen(PGM_P const lcd_msg);
     static void draw_kill_screen();
     static void set_status(const char* const message, const bool persist=false);
     static void set_status_P(PGM_P const message, const int8_t level=0);
@@ -390,8 +390,8 @@ public:
 
   #else // No LCD
 
-    static inline void init() {}
-    static inline void update() {}
+    inline void init() {}
+    inline void update() {}
     static inline void refresh() {}
     static inline void set_alert_status_P(PGM_P message) { UNUSED(message); }
     static inline void set_status(const char* const message, const bool persist=false) { UNUSED(message); UNUSED(persist); }

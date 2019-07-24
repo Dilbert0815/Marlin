@@ -60,7 +60,7 @@ void Servo::move(const int value) {
   static_assert(COUNT(servo_delay) == NUM_SERVOS, "SERVO_DELAY must be an array NUM_SERVOS long.");
   if (this->attach(0) >= 0) {
     this->write(value);
-    safe_delay(servo_delay[this->channel]);
+    safe_delay(servo_delay[this->channel], true);
     #if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE)
       this->detach();
     #endif

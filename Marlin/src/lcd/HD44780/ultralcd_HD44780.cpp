@@ -413,35 +413,52 @@ void MarlinUI::clear_lcd() { lcd.clear(); }
 
   void MarlinUI::bootscreen(void) {
     set_custom_characters(CHARSET_BOOT);
-    lcd.clear();
+//    lcd.clear();
 
     #define LCD_EXTRA_SPACE (LCD_WIDTH-8)
 
-    #define CENTER_OR_SCROLL(STRING,DELAY) \
+  #define CENTER(STRING, LEN) { \
+      const char* p = STRING; \
+      uint8_t len; \
       lcd_erase_line(3); \
-      if (utf8_strlen(STRING) <= LCD_WIDTH) { \
-        lcd_moveto((LCD_WIDTH - utf8_strlen_P(PSTR(STRING))) / 2, 3); \
-        lcd_put_u8str_P(PSTR(STRING)); \
-        safe_delay(DELAY); \
+      while (!START_OF_UTF8_CHAR(pgm_read_byte(p))) p++; \
+      len = utf8_strlen_P(p); \
+      if (len <= LCD_WIDTH) { \
+        lcd_moveto((LCD_WIDTH - len) / 2, 3); \
+        lcd_put_u8str_max_P(p, len); \
+        while(LCD_WIDTH < len++) \
+          lcd_put_wchar(' '); \
       } \
       else { \
-        lcd_scroll(0, 3, PSTR(STRING), LCD_WIDTH, DELAY); \
-      }
+        lcd_moveto(0, 3); \
+        lcd_put_u8str_max_P(p, LCD_WIDTH); \
+      } \
+    }
 
+      uint8_t idx, len;    
     #ifdef STRING_SPLASH_LINE1
       //
       // Show the Marlin logo with splash line 1
       //
-      if (LCD_EXTRA_SPACE >= utf8_strlen(STRING_SPLASH_LINE1) + 1) {
+      if (LCD_EXTRA_SPACE >= utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) + 1) {
         //
         // Show the Marlin logo, splash line1, and splash line 2
         //
         logo_lines(PSTR(" " STRING_SPLASH_LINE1));
-        #ifdef STRING_SPLASH_LINE2
-          CENTER_OR_SCROLL(STRING_SPLASH_LINE2, 2000);
-        #else
-          safe_delay(2000, true);
-        #endif
+      #ifdef STRING_SPLASH_LINE2
+        idx = MAX(0, ui.boot_scroll_idx - LCD_WIDTH); //
+        idx = MIN(idx, MAX(0, utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) - LCD_WIDTH)); // align string end right
+
+        if ((ui.boot_scroll_idx > (utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) + 2*LCD_WIDTH))
+          && (ui.boot_scroll_idx > (BOOTSCREEN_TIMEOUT / LCD_UPDATE_INTERVAL))) // finish scrolling early
+          ui.boot_scroll_idx = ui.boot_scroll_max;
+
+        if (utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) <= LCD_WIDTH)  // if strlen < WIDTH: no scroll
+          idx = 0;
+          
+        len = MIN(LCD_WIDTH, utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)));
+        CENTER(PSTR(STRING_SPLASH_LINE2)+idx, len);
+      #endif
       }
       else {
         //
@@ -454,13 +471,29 @@ void MarlinUI::clear_lcd() { lcd.clear(); }
           #define _SPLASH_WAIT_1 2000
         #endif
         logo_lines(PSTR(""));
-        CENTER_OR_SCROLL(STRING_SPLASH_LINE1, _SPLASH_WAIT_1);
-        #ifdef STRING_SPLASH_LINE2
-          CENTER_OR_SCROLL(STRING_SPLASH_LINE2, 1500, true);
-          #ifdef STRING_SPLASH_LINE3
-            CENTER_OR_SCROLL(STRING_SPLASH_LINE3, 1500, true);
-          #endif
-        #endif
+        idx = ui.boot_scroll_idx;
+      #ifdef STRING_SPLASH_LINE2
+        if (idx >= (2*LCD_WIDTH + utf8_strlen_P(PSTR(STRING_SPLASH_LINE1))))
+        {
+          //scroll idx within SPLASH2
+          len = MIN(LCD_WIDTH, utf8_strlen_P(PSTR(STRING_SPLASH_LINE2))); // limit screen width       
+          idx = MAX(0, idx - (3*LCD_WIDTH + utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)))); // 0 ... x2
+          idx = MIN(idx, MAX(0, utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) - LCD_WIDTH)); // align string end right
+          if (utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) <= LCD_WIDTH)  // if strlen < WIDTH: no scroll
+            idx = 0;
+          CENTER(PSTR(STRING_SPLASH_LINE2)+idx, len);         
+        }  
+        else
+      #endif
+        {
+          //scroll idx within SPLASH1
+          len = MIN(LCD_WIDTH, utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)));
+          idx = MAX(0, idx - LCD_WIDTH);
+          idx = MIN(idx, MAX(0, utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) - LCD_WIDTH)); // align string end right
+          if (utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) <= LCD_WIDTH)  // if strlen < WIDTH: no scroll
+            idx = 0;
+          CENTER(PSTR(STRING_SPLASH_LINE1)+idx, len);
+        }
       }
     #elif defined(STRING_SPLASH_LINE2)
       //
@@ -468,24 +501,26 @@ void MarlinUI::clear_lcd() { lcd.clear(); }
       //
       if (LCD_EXTRA_SPACE >= utf8_strlen(STRING_SPLASH_LINE2) + 1) {
         logo_lines(PSTR(" " STRING_SPLASH_LINE2));
-        safe_delay(2000);
+//        safe_delay(2000);
       }
       else {
         logo_lines(PSTR(""));
-        CENTER_OR_SCROLL(STRING_SPLASH_LINE2, 2000);
+
+        //scroll idx within SPLASH2 
+        len = MIN(LCD_WIDTH, utf8_strlen_P(PSTR(STRING_SPLASH_LINE2))); 
+        idx = MAX(0, ui.boot_scroll_idx - (1*LCD_WIDTH)); // 0 ... x2, strln(1) is zero
+        idx = MIN(idx, MAX(0, utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) - LCD_WIDTH)); // align string end right
+        if (utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) <= LCD_WIDTH)  // if strlen < WIDTH: no scroll
+          idx = 0;
+        CENTER(PSTR(STRING_SPLASH_LINE2)+idx, len);    
       }
     #else
       //
       // Show only the Marlin logo
       //
       logo_lines(PSTR(""));
-      safe_delay(2000);
+//      safe_delay(2000);
     #endif
-
-    lcd.clear();
-    safe_delay(100);
-    set_custom_characters(CHARSET_INFO);
-    lcd.clear();
   }
 
   #if 0

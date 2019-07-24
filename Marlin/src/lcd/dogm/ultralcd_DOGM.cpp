@@ -133,7 +133,7 @@ void MarlinUI::set_font(const MarlinFont font_nr) {
       } while (u8g.nextPage());
     }
 
-    void lcd_custom_bootscreen() {
+    void MarlinUI::custom_bootscreen() {
       #if ENABLED(ANIMATED_BOOTSCREEN)
         LOOP_L_N(f, COUNT(custom_bootscreen_animation)) {
           if (f) safe_delay(CUSTOM_BOOTSCREEN_FRAME_TIME, true);
@@ -145,15 +145,15 @@ void MarlinUI::set_font(const MarlinFont font_nr) {
       #ifndef CUSTOM_BOOTSCREEN_TIMEOUT
         #define CUSTOM_BOOTSCREEN_TIMEOUT 2500
       #endif
-      safe_delay(CUSTOM_BOOTSCREEN_TIMEOUT, true);
+//      safe_delay(CUSTOM_BOOTSCREEN_TIMEOUT, true);
     }
 
   #endif // SHOW_CUSTOM_BOOTSCREEN
 
   void MarlinUI::bootscreen(void) {
-    #if ENABLED(SHOW_CUSTOM_BOOTSCREEN)
-      lcd_custom_bootscreen();
-    #endif
+//    #if ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+//      lcd_custom_bootscreen();
+//    #endif
 
     // Screen dimensions.
     //const uint8_t width = u8g.getWidth(), height = u8g.getHeight();
@@ -192,20 +192,64 @@ void MarlinUI::set_font(const MarlinFont font_nr) {
     }
     NOLESS(offx, 0);
     NOLESS(offy, 0);
+    
+    char txt[LCD_WIDTH + 2];
 
     u8g.firstPage();
     do {
+      uint8_t idx = MIN(MAX(0, ui.boot_scroll_idx - LCD_WIDTH),
+                         MAX(0, utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) - LCD_WIDTH /*- 1*/));
+
       u8g.drawBitmapP(offx, offy, (START_BMPWIDTH + 7) / 8, START_BMPHEIGHT, start_bmp);
       set_font(FONT_MENU);
+
       #ifndef STRING_SPLASH_LINE2
-        u8g.drawStr(txt_offx_1, txt_base, STRING_SPLASH_LINE1);
+          uint8_t txtX = ((width - utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) * (MENU_FONT_WIDTH)) / 2);
+          if (utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) >= LCD_WIDTH)
+          {
+            txtX = 0;
+          }
+          else {
+            idx = 0;
+          }
+          /* splash 1 */
+          strncpy(txt, STRING_SPLASH_LINE1 + idx /*+ 1*/, LCD_WIDTH /*+ 1*/);
+          txt[LCD_WIDTH /*+ 1*/] = '\0';
+          u8g.drawStr(txtX, height - MENU_FONT_HEIGHT, txt);
+
       #else
-        u8g.drawStr(txt_offx_1, txt_base - (MENU_FONT_HEIGHT), STRING_SPLASH_LINE1);
-        u8g.drawStr(txt_offx_2, txt_base, STRING_SPLASH_LINE2);
-      #endif
+          uint8_t txtX = ((width - utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) * (MENU_FONT_WIDTH)) / 2);
+          if (utf8_strlen_P(PSTR(STRING_SPLASH_LINE1)) >= LCD_WIDTH)
+          {
+            txtX = 0;
+          }
+          else {
+            idx = 0;
+          }
+          /* splash 1 */
+          strncpy(txt, STRING_SPLASH_LINE1 + idx /*+ 1*/, LCD_WIDTH /*+ 1*/);
+          txt[LCD_WIDTH /*+ 1*/] = '\0';
+          u8g.drawStr(txtX, height - (MENU_FONT_HEIGHT) * 3 / 2, txt);
+
+          /* splash 2 */
+          idx = MIN(MAX(0, ui.boot_scroll_idx - LCD_WIDTH), 
+                    MAX(0,utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) - LCD_WIDTH /*- 1*/));
+          txtX = ((width - utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) * (MENU_FONT_WIDTH)) / 2);
+          if (utf8_strlen_P(PSTR(STRING_SPLASH_LINE2)) > LCD_WIDTH)
+          {
+            txtX = 0;
+          }
+          else {
+            idx = 0;
+          }
+          strncpy(txt, STRING_SPLASH_LINE2 + idx, LCD_WIDTH /*+ 1*/);
+          txt[LCD_WIDTH /*+ 1*/] = '\0';
+          u8g.drawStr(txtX, height - (MENU_FONT_HEIGHT) / 2, txt);
+       #endif
+ 
     } while (u8g.nextPage());
 
-    safe_delay(BOOTSCREEN_TIMEOUT);
+//    safe_delay(BOOTSCREEN_TIMEOUT);
   }
 #endif // SHOW_BOOTSCREEN
 

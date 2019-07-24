@@ -344,6 +344,11 @@ void MarlinUI::init() {
   #if HAS_ENCODER_ACTION
     encoderDiff = 0;
   #endif
+  
+  #if ENABLED(SHOW_BOOTSCREEN)
+    bootscreen_done = false;
+    boot_scroll_idx = 0;
+  #endif
 }
 
 bool MarlinUI::get_blink() {
@@ -594,6 +599,11 @@ void MarlinUI::kill_screen(PGM_P lcd_msg) {
   #endif
 
   draw_kill_screen();
+
+#if ENABLED(SHOW_BOOTSCREEN)
+  bootscreen_done = false;
+  boot_scroll_idx = 0;
+#endif
 }
 
 void MarlinUI::quick_feedback(const bool clear_buttons/*=true*/) {
@@ -916,7 +926,7 @@ void MarlinUI::update() {
         #endif
       }
 
-    #endif
+    #endif //HAS_ENCODER_ACTION
 
     // This runs every ~100ms when idling often enough.
     // Instead of tracking changes just redraw the Status Screen once per second.
@@ -946,6 +956,23 @@ void MarlinUI::update() {
       }
     #endif
 
+    #if ENABLED(SHOW_BOOTSCREEN)
+    {
+      if (((currentScreen == bootscreen)
+        #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+          || (currentScreen == custom_bootscreen) 
+        #endif
+          )
+        && (boot_scroll_idx < boot_scroll_max) 
+        )
+      {
+        boot_scroll_idx++;
+        lcd_status_update_delay = 12;
+        lcdDrawUpdate = LCDVIEW_REDRAW_NOW;
+        return_to_status_ms = ms + LCD_TIMEOUT_TO_STATUS;      
+      }
+    }
+    #endif
     // then we want to use 1/2 of the time only.
     uint16_t bbr2 = planner.block_buffer_runtime() >> 1;
 
@@ -1557,7 +1584,7 @@ void MarlinUI::update() {
     bootscreen_done = false;
     boot_scroll_idx = 0;
     boot_scroll_max = CUSTOM_BOOTSCREEN_TIMEOUT / LCD_UPDATE_INTERVAL;
-    //goto_screen(custom_bootscreen);
+    goto_screen(custom_bootscreen);
   }
   #endif
   else if (!finish) {

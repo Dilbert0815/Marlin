@@ -934,10 +934,28 @@ void setup() {
   ui.init();
   ui.reset_status();
 
-  #if HAS_SPI_LCD && ENABLED(SHOW_BOOTSCREEN)
-    ui.bootscreen();
+//  #if HAS_SPI_LCD && ENABLED(SHOW_BOOTSCREEN)
+//    ui.bootscreen();
+//  #endif
+
+  #if ENABLED(SHOW_BOOTSCREEN)
+    #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+    ui.show_bootscreen(false, true);
+    do {
+      safe_delay(100, true);
+    }
+    while (!ui.show_bootscreen(true, true));
+    #endif
+
+    ui.show_bootscreen(false
+    #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+      , false
+    #endif
+    );
+//    safe_delay(100, true);
   #endif
 
+  
   #if ENABLED(SDIO_SUPPORT) && !PIN_EXISTS(SD_DETECT)
     // Auto-mount the SD for EEPROM.dat emulation
     if (!card.isDetected()) card.initsd();
@@ -1047,6 +1065,19 @@ void setup() {
     fanmux_init();
   #endif
 
+  #if ENABLED(SHOW_BOOTSCREEN)
+    do {
+      safe_delay(100, true);
+    }
+    while (!ui.show_bootscreen(true
+    #if ENABLED(DOGLCD) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
+      , false
+    #endif
+      ));
+  #endif
+
+    ui.reset_status();
+  
   #if ENABLED(MIXING_EXTRUDER)
     mixer.init();
   #endif
